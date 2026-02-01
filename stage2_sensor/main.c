@@ -83,8 +83,6 @@ static void uart_puts(const char *s)
 
 static void i2c_init(void)
 {
-    REG8(I2C_BASE + I2C_PRER_LO) = 0x30;
-    REG8(I2C_BASE + I2C_PRER_HI) = 0x00;
     REG8(I2C_BASE + I2C_CTR) = I2C_CTR_EN;
 }
 
