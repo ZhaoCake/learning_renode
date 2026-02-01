@@ -1,0 +1,26 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Editor/OS
+.vscode/
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv
+
+# C/C++ build artifacts
+build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+
+# Renode
+*.log
+*.trace

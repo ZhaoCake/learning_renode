@@ -1,0 +1,35 @@
+:name: Custom RISC-V Basic Test
+:description: This script runs a basic LED blinky on a custom RISC-V platform
+
+# 1. 创建机器
+mach create "my_riscv_mach"
+
+# 2. 加载平台描述 (自定义)
+machine LoadPlatformDescription @my_platform.repl
+
+# RISC-V 复位向量 (Reset Vector)
+# Renode 的 RiscV32 CPU 默认 ResetVector=0x1000；这里显式设置为我们的 flash 基地址
+cpu ResetVector 0x20000000
+
+# 3. 配置输出 (UART 存在于 0x40010000, 名字叫 uart)
+showAnalyzer sysbus.uart
+
+# 4. 加载二进制文件
+# 本地编译的 Firmware
+$bin = @firmware.elf
+
+sysbus LoadELF $bin
+
+# --- 调试配置 ---
+# 开启 GDB Server (默认端口 3333)
+machine StartGdbServer 3333
+
+# 让 sysbus 记录 GPIO 外设寄存器访问（否则即使 logLevel=DEBUG 也不会打印每次读写）
+sysbus LogPeripheralAccess sysbus.gpio true
+
+# 日志等级：0=DEBUG, -1=NOISY
+# logLevel 0 sysbus.gpio
+# ----------------
+
+# 5. 开始运行
+# start

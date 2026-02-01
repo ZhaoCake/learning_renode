@@ -1,0 +1,33 @@
+// my_platform.repl - 自定义 RISC-V 32位 学习平台
+
+// 1. 定义 CPU
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32imac_zicsr"
+    hartId: 0
+    // 允许非对齐访问 (可选，视具体实现的 CPU 而定)
+    allowUnalignedAccesses: true
+
+// 2. 定义内存
+// RAM: 64KB at 0x80000000
+ram: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x00010000
+
+// Flash: 16MB at 0x20000000
+flash: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x01000000
+
+// 3. 定义外设
+// 为了演示自定义，我们将 GPIO 移动到 0x40000000
+// 使用 Renode 内置的 SiFive_GPIO 模型，但连接到自定义地址
+gpio: GPIOPort.SiFive_GPIO @ sysbus 0x40000000
+    // 连接到 LED (Pin 19, 21, 22 对应 main.c)
+    19 -> led_green@0
+    21 -> led_blue@0
+    22 -> led_red@0
+
+led_green: Miscellaneous.LED @ gpio 19
+led_blue:  Miscellaneous.LED @ gpio 21
+led_red:   Miscellaneous.LED @ gpio 22
+
+// UART at 0x40010000
+uart: UART.SiFive_UART @ sysbus 0x40010000
