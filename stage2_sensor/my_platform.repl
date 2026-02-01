@@ -1,0 +1,30 @@
+// stage2_sensor platform (RISC-V + GPIO button interrupt + UART)
+
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32imac_zicsr_zifencei"
+    privilegedArchitecture: PrivilegedArchitecture.Priv1_10
+    timeProvider: clint
+
+ram: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x00010000
+
+flash: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x01000000
+
+uart: UART.SiFive_UART @ sysbus 0x10013000
+    IRQ -> plic@3
+
+gpio: GPIOPort.SiFive_GPIO @ sysbus 0x10012000
+    [0-31] -> plic@[8-39]
+
+button: Miscellaneous.Button @ gpio 0
+    -> gpio@0
+
+plic: IRQControllers.PlatformLevelInterruptController @ sysbus 0x0C000000
+    0 -> cpu@11
+    numberOfSources: 64
+    numberOfContexts: 1
+
+clint: IRQControllers.CoreLevelInterruptor @ sysbus 0x02000000
+    [0,1] -> cpu@[3,7]
+    frequency: 10000000

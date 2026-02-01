@@ -1,0 +1,17 @@
+:name: stage2_sensor (RISC-V GPIO button IRQ + UART)
+:description: RISC-V platform with SiFive GPIO + PLIC + UART, button generates external interrupt
+
+mach create "stage2_sensor"
+
+machine LoadPlatformDescription @my_platform.repl
+
+showAnalyzer sysbus.uart
+
+sysbus LoadELF @firmware.elf
+
+# Optional: enable peripheral access log
+# sysbus LogPeripheralAccess sysbus.gpio true
+
+machine StartGdbServer 3333
+
+start
