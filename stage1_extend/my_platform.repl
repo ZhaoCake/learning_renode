@@ -1,0 +1,32 @@
+// my_platform.repl - stage1_extend: BootROM(0x1000) -> flash(0x20000000)
+
+// 1. CPU
+cpu: CPU.RiscV32 @ sysbus
+    cpuType: "rv32imac_zicsr"
+    hartId: 0
+    allowUnalignedAccesses: true
+
+// 2. Memories
+// BootROM: minimal mapped ROM window at ResetVector (0x00001000)
+bootrom: Memory.MappedMemory @ sysbus 0x00001000
+    size: 0x00001000
+
+// RAM: 64KB at 0x80000000
+ram: Memory.MappedMemory @ sysbus 0x80000000
+    size: 0x00010000
+
+// Flash: 16MB at 0x20000000
+flash: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x01000000
+
+// 3. Peripherals
+gpio: GPIOPort.SiFive_GPIO @ sysbus 0x40000000
+    19 -> led_green@0
+    21 -> led_blue@0
+    22 -> led_red@0
+
+led_green: Miscellaneous.LED @ gpio 19
+led_blue:  Miscellaneous.LED @ gpio 21
+led_red:   Miscellaneous.LED @ gpio 22
+
+uart: UART.SiFive_UART @ sysbus 0x40010000

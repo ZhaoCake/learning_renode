@@ -9,7 +9,7 @@ machine LoadPlatformDescription @my_platform.repl
 
 # RISC-V 复位向量 (Reset Vector)
 # Renode 的 RiscV32 CPU 默认 ResetVector=0x1000；这里显式设置为我们的 flash 基地址
-cpu ResetVector 0x20000000
+# cpu ResetVector 0x20000000
 
 # 3. 配置输出 (UART 存在于 0x40010000, 名字叫 uart)
 showAnalyzer sysbus.uart

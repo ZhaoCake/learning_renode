@@ -1,0 +1,21 @@
+:name: Custom RISC-V Extend (BootROM + LoadBinary)
+:description: BootROM at 0x1000 jumps to firmware in flash (0x20000000)
+
+mach create "my_riscv_mach"
+
+machine LoadPlatformDescription @my_platform.repl
+
+# 默认是 0x1000
+# cpu ResetVector 0x20000000
+
+showAnalyzer sysbus.uart
+
+# Load binaries to their execution addresses
+# 我们可以先直接运行观察现象。
+# 然后注释掉对 bootrom 的加载，只加载 flash 里的固件，观察不同。
+# 然后我们把上面的复位向量设为 flash 的地址，观察不同。
+sysbus LoadBinary @bootrom.bin 0x00001000
+sysbus LoadBinary @firmware.bin 0x20000000
+
+machine StartGdbServer 3333
+sysbus LogPeripheralAccess sysbus.gpio true
