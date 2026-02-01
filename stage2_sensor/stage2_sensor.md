@@ -42,11 +42,28 @@ sysbus.gpio.button Press
 
 ```
 [IRQ] Button pressed, count = 1
+[IRQ] Temp = 25 C
 ```
 
 要再次触发，需要Release。或者一直Toggle来反转。
 
 > 不妨查看这个button具备哪些方法和属性。
+
+## 虚拟温度传感器（TMP108）
+
+平台里增加了一个 I2C 温度传感器：`tempSensor`。
+
+在 Renode Monitor 里可以直接设置/读取温度：
+
+```text
+sysbus.i2c.tempSensor Temperature 36.5
+sysbus.i2c.tempSensor Temperature
+```
+
+说明：
+
+- 该传感器挂在 `i2c` 总线上（`I2C.OpenCoresI2C`）
+- I2C 设备地址为 `0x48`
 
 ## 说明
 

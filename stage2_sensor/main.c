@@ -5,6 +5,25 @@
 #define UART_TXCTRL     0x08
 #define UART_DIV        0x18
 
+#define I2C_BASE        0x10030000
+#define I2C_PRER_LO     0x00
+#define I2C_PRER_HI     0x04
+#define I2C_CTR         0x08
+#define I2C_TXR         0x0C
+#define I2C_RXR         0x0C
+#define I2C_CR          0x10
+#define I2C_SR          0x10
+
+#define I2C_CTR_EN      0x80
+#define I2C_CR_STA      0x80
+#define I2C_CR_STO      0x40
+#define I2C_CR_RD       0x20
+#define I2C_CR_WR       0x10
+#define I2C_CR_IACK     0x01
+
+#define I2C_SR_RXNACK   0x80
+#define I2C_SR_IF       0x01
+
 #define GPIO_BASE       0x10012000
 #define GPIO_VALUE      0x00
 #define GPIO_INPUT_EN   0x04
@@ -21,7 +40,11 @@
 #define IRQ_GPIO0      8
 #define BUTTON_PIN     0
 
+#define TMP108_ADDR    0x48
+#define TMP108_REG_TEMP 0x00
+
 #define REG32(addr) (*(volatile uint32_t *)(addr))
+#define REG8(addr)  (*(volatile uint8_t *)(addr))
 
 static volatile uint32_t button_count = 0;
 
@@ -56,6 +79,51 @@ static void uart_puts(const char *s)
         }
         uart_putc(*s++);
     }
+}
+
+static void i2c_init(void)
+{
+    REG8(I2C_BASE + I2C_PRER_LO) = 0x30;
+    REG8(I2C_BASE + I2C_PRER_HI) = 0x00;
+    REG8(I2C_BASE + I2C_CTR) = I2C_CTR_EN;
+}
+
+static void i2c_wait_if(void)
+{
+    for (int i = 0; i < 10000; i++) {
+        if (REG8(I2C_BASE + I2C_SR) & I2C_SR_IF) {
+            REG8(I2C_BASE + I2C_CR) = I2C_CR_IACK;
+            break;
+        }
+    }
+}
+
+static uint8_t i2c_read_reg(uint8_t addr, uint8_t reg)
+{
+    /* START + address (write) */
+    REG8(I2C_BASE + I2C_TXR) = (uint8_t)((addr << 1) | 0);
+    REG8(I2C_BASE + I2C_CR) = I2C_CR_STA | I2C_CR_WR;
+    i2c_wait_if();
+
+    /* write register pointer */
+    REG8(I2C_BASE + I2C_TXR) = reg;
+    REG8(I2C_BASE + I2C_CR) = I2C_CR_WR;
+    i2c_wait_if();
+
+    /* repeated START + address (read) */
+    REG8(I2C_BASE + I2C_TXR) = (uint8_t)((addr << 1) | 1);
+    REG8(I2C_BASE + I2C_CR) = I2C_CR_STA | I2C_CR_WR;
+    i2c_wait_if();
+
+    /* read one byte */
+    REG8(I2C_BASE + I2C_CR) = I2C_CR_RD;
+    i2c_wait_if();
+    uint8_t value = REG8(I2C_BASE + I2C_RXR);
+
+    /* STOP */
+    REG8(I2C_BASE + I2C_CR) = I2C_CR_STO;
+
+    return value;
 }
 
 static void plic_init(void)
@@ -102,6 +170,24 @@ static void handle_external_interrupt(void)
         buf[i++] = '\n';
         buf[i] = '\0';
         uart_puts(buf);
+
+        int8_t temp = (int8_t)i2c_read_reg(TMP108_ADDR, TMP108_REG_TEMP);
+        uart_puts("[IRQ] Temp = ");
+        char tbuf[8];
+        int ti = 0;
+        if (temp < 0) {
+            tbuf[ti++] = '-';
+            temp = (int8_t)(-temp);
+        }
+        if (temp >= 10) {
+            tbuf[ti++] = (char)('0' + (temp / 10));
+        }
+        tbuf[ti++] = (char)('0' + (temp % 10));
+        tbuf[ti++] = ' ';
+        tbuf[ti++] = 'C';
+        tbuf[ti++] = '\n';
+        tbuf[ti] = '\0';
+        uart_puts(tbuf);
     }
     REG32(PLIC_CLAIM) = claim;
 }
@@ -124,6 +210,7 @@ int main(void)
 
     gpio_init();
     plic_init();
+    i2c_init();
     enable_interrupts();
 
     uart_puts("stage2_sensor: ready, press button in Renode\n");
