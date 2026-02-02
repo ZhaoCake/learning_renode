@@ -1,0 +1,17 @@
+:name: stage2_extend (socket temperature)
+:description: Use Python socket to update TMP108 temperature
+
+mach create "stage2_extend"
+
+machine LoadPlatformDescription @../stage2_sensor/my_platform.repl
+
+showAnalyzer sysbus.uart
+
+sysbus LoadELF @../stage2_sensor/firmware.elf
+
+# Start TCP listener (IronPython)
+include @socket_temp.py
+
+machine StartGdbServer 3333
+
+start
