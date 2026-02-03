@@ -1,5 +1,5 @@
 {
-  description = "STM32 Renode Development Environment";
+  description = "Learning Renode Development Environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -45,7 +45,7 @@
 
           shellHook = ''
             echo "=========================================="
-            echo "   STM32 Renode Development Environment   "
+            echo "   Learning Renode Development Environment   "
             echo "=========================================="
             echo "Tools Check:"
             if command -v renode >/dev/null 2>&1; then
